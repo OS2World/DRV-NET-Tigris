@@ -1,0 +1,46 @@
+# Makefile for dp83815.os2 : NDIS 2.0.1 MAC driver
+# MS-MASM 6.0 & MS-C 6.0
+
+AS      = ml.exe
+ASFLAGS = /c /Fl /Cp /nologo /DOS2=1 /DNECWARP=1 /DNSM_DOUBLE_BUFFER=0
+CC      = cl.exe
+CCFLAGS = /c /Zp /G2s /Answ /Oti /Fc /DOS2=1 /DNECWARP=1
+LN      = link386.exe
+LNFLAGS = /map /inf /exepack:2 /packcode /packdata /noignorecase /nologo
+LNLIBS  = \DDK\BASE\LIB\doscalls.lib
+H2I     = h2inc.exe
+
+TARGET  = dp83815.os2
+OBJECTS = NSMres.obj NSMmsgs.obj NSMstdio.obj ephsma.obj HSM.obj NSMinit.obj
+INCS    = nsm.inc cdi.inc hsm.inc ephsma.inc
+
+
+.SUFFIXES: .asm .obj .inc .h
+
+.asm.obj:
+  $(AS) $(ASFLAGS) $**
+
+.h.inc:
+  $(H2I) /C /Fc$@ /Ht $**
+
+
+$(TARGET):	inc $(OBJECTS)
+  $(LN) $(LNFLAGS) $(OBJECTS),$@,,$(LNLIBS),$*.def
+  eautil $@ nul /s
+  mapsym $*
+
+HSM.obj:	ephsm.c
+  $(CC) $(CCFLAGS) /FoHSM.obj ephsm.c
+
+inc:	$(INCS)
+
+clean:	cleaninc
+  if exist *.obj  del *.obj
+  if exist *.cod  del *.cod
+  if exist *.lst  del *.lst
+
+cleaninc:
+   if exist nsm.inc del nsm.inc
+   if exist cdi.inc del cdi.inc
+   if exist hsm.inc del hsm.inc
+   if exist ephsma.inc del ephsma.inc
